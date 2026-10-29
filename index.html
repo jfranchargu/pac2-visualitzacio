@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="ca">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PAC 2 Visualització</title>
+<meta name="description" content="Tres visualitzacions de la PAC 2 de Visualització de dades (UOC): bar chart, diagrama de xarxa i ridgeline chart.">
+<style>
+  :root { color-scheme: light; --page: #f9f9f7; --surface: #fcfcfb; --ink: #0b0b0b; --ink-2: #52514e; --ring: rgba(11,11,11,.10); }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { color-scheme: dark; --page: #0d0d0d; --surface: #1a1a19; --ink: #f0efec; --ink-2: #c3c2b7; --ring: rgba(255,255,255,.10); } }
+  :root[data-theme="dark"] { color-scheme: dark; --page: #0d0d0d; --surface: #1a1a19; --ink: #f0efec; --ink-2: #c3c2b7; --ring: rgba(255,255,255,.10); }
+  body { margin: 0; background: var(--page); color: var(--ink); font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  main { max-width: 760px; margin: 40px auto; padding: 0 16px; }
+  h1 { font-size: 1.5rem; margin: 0 0 4px; } p { color: var(--ink-2); line-height: 1.5; }
+  a.card { display: block; background: var(--surface); box-shadow: 0 0 0 1px var(--ring); border-radius: 12px; padding: 16px 20px; margin: 12px 0; color: inherit; text-decoration: none; }
+  a.card:hover { box-shadow: 0 0 0 2px var(--ink-2); }
+  a.card b { display: block; margin-bottom: 4px; } a.card span { color: var(--ink-2); font-size: .92rem; }
+</style>
+</head>
+<body>
+<main>
+  <h1>PAC 2 · Visualització de dades</h1>
+  <p>Joel Franch Argullol · Màster Universitari en Ciència de Dades (UOC) · 2026-27 S1</p>
+  <a class="card" href="1_bar_chart_renovables.html"><b>1. Bar chart</b><span>Quota d'energia renovable als 27 estats de la UE, 2024 (Eurostat)</span></a>
+  <a class="card" href="2_diagrama_xarxa_vols.html"><b>2. Diagrama de xarxa</b><span>Rutes aèries domèstiques entre aeroports d'Espanya, 2024 (Eurostat)</span></a>
+  <a class="card" href="3_ridgeline_nits_tropicals.html"><b>3. Ridgeline chart</b><span>Temperatura mínima d'estiu a l'Aeroport de Barcelona per dècades, 1950–2025 (NOAA GHCN-D)</span></a>
+</main>
+</body>
+</html>

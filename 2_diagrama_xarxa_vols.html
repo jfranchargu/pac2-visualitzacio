@@ -1,0 +1,251 @@
+<!doctype html>
+<html lang="ca">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Xarxa aèria domèstica</title>
+<meta name="description" content="Diagrama de xarxa: rutes aèries domèstiques entre els aeroports d'Espanya, passatgers 2024. PAC 2 Visualització de dades (UOC).">
+<style>
+  :root {
+    color-scheme: light;
+    --surface: #fcfcfb; --page: #f9f9f7;
+    --ink: #0b0b0b; --ink-2: #52514e; --muted: #898781;
+    --grid: #e1e0d9; --axis: #c3c2b7; --edge: #8f8d86;
+    --z1: #2a78d6; --z2: #eb6834; --z3: #1baf7a; --z4: #898781;
+    --ring: rgba(11,11,11,.10); --halo: #fcfcfb;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --surface: #1a1a19; --page: #0d0d0d;
+      --ink: #f0efec; --ink-2: #c3c2b7; --muted: #898781;
+      --grid: #2c2c2a; --axis: #383835; --edge: #77756f;
+      --z1: #3987e5; --z2: #d95926; --z3: #199e70; --z4: #898781;
+      --ring: rgba(255,255,255,.10); --halo: #1a1a19;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --surface: #1a1a19; --page: #0d0d0d;
+    --ink: #f0efec; --ink-2: #c3c2b7; --muted: #898781;
+    --grid: #2c2c2a; --axis: #383835; --edge: #77756f;
+    --z1: #3987e5; --z2: #d95926; --z3: #199e70; --z4: #898781;
+    --ring: rgba(255,255,255,.10); --halo: #1a1a19;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--page); color: var(--ink);
+         font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  .card { max-width: 1100px; margin: 24px auto; padding: 28px 32px 20px; background: var(--surface);
+          border-radius: 12px; box-shadow: 0 0 0 1px var(--ring); }
+  h1 { font-size: 1.45rem; line-height: 1.25; margin: 0 0 6px; font-weight: 650; text-wrap: balance; }
+  .sub { color: var(--ink-2); margin: 0 0 12px; font-size: .95rem; line-height: 1.4; max-width: 820px; }
+  .bar { display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+  .controls { display: flex; gap: 6px; align-items: center; font-size: .82rem; color: var(--ink-2); }
+  .controls button { font: inherit; padding: 4px 10px; border-radius: 999px; border: 1px solid var(--axis);
+                     background: transparent; color: var(--ink-2); cursor: pointer; }
+  .controls button[aria-pressed="true"] { background: var(--ink); color: var(--surface); border-color: var(--ink); }
+  .legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: .82rem; color: var(--ink-2); }
+  .legend span::before { content: ""; display: inline-block; width: 10px; height: 10px; border-radius: 50%;
+                         margin-right: 6px; vertical-align: -1px; background: var(--c); }
+  .wrap { display: grid; grid-template-columns: 1fr 250px; gap: 20px; }
+  svg { display: block; width: 100%; height: auto; touch-action: none; }
+  .link { stroke: var(--edge); stroke-linecap: round; transition: stroke-opacity .15s; }
+  .node circle { stroke: var(--surface); stroke-width: 1.5px; cursor: grab; }
+  .node text { font-size: 11px; fill: var(--ink); paint-order: stroke; stroke: var(--halo); stroke-width: 3px; stroke-linejoin: round; pointer-events: none; }
+  .node text.big { font-size: 12.5px; font-weight: 650; }
+  .dim .link { stroke-opacity: .04 !important; }
+  .dim .node { opacity: .18; }
+  .dim .node.on { opacity: 1; }
+  .dim .link.on { stroke-opacity: .85 !important; stroke: var(--ink); }
+  .side h2 { font-size: .9rem; margin: 6px 0 8px; }
+  .side ol { margin: 0; padding-left: 20px; font-size: .84rem; line-height: 1.55; color: var(--ink-2); }
+  .side ol b { color: var(--ink); font-variant-numeric: tabular-nums; font-weight: 600; }
+  .side li.top { color: var(--ink); }
+  .side p { font-size: .8rem; color: var(--ink-2); line-height: 1.45; }
+  .side .k { display: grid; grid-template-columns: auto 1fr; gap: 2px 8px; font-size: .8rem; color: var(--ink-2); margin-top: 8px; }
+  .side .k b { color: var(--ink); text-align: right; font-variant-numeric: tabular-nums; }
+  .foot { margin-top: 14px; padding-top: 10px; border-top: 1px solid var(--grid); font-size: .78rem; color: var(--muted); line-height: 1.5; }
+  .foot a { color: inherit; }
+  #tip { position: fixed; pointer-events: none; background: var(--surface); color: var(--ink); border-radius: 8px;
+         box-shadow: 0 0 0 1px var(--ring), 0 6px 18px rgba(0,0,0,.12); padding: 8px 10px; font-size: .82rem;
+         line-height: 1.45; opacity: 0; transition: opacity .1s; max-width: 260px; }
+  #tip b { font-variant-numeric: tabular-nums; }
+  .geo-note { font-size: 11px; fill: var(--muted); }
+  .geo-box { fill: none; stroke: var(--axis); stroke-dasharray: 3 3; }
+  details { margin-top: 10px; font-size: .82rem; color: var(--ink-2); }
+  table { border-collapse: collapse; margin-top: 6px; font-variant-numeric: tabular-nums; }
+  td, th { padding: 2px 12px 2px 0; text-align: left; }
+  @media (max-width: 820px) { .wrap { grid-template-columns: 1fr; } }
+  @media (max-width: 600px) { .card { margin: 0; border-radius: 0; padding: 20px 16px; } h1 { font-size: 1.2rem; } }
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+</head>
+<body>
+<main class="card">
+  <h1>La ruta aèria domèstica amb més passatgers d'Espanya no és Madrid–Barcelona, sinó Barcelona–Palma</h1>
+  <p class="sub">Xarxa de vols interiors el 2024: cada cercle és un aeroport (àrea proporcional als seus passatgers domèstics) i cada línia una ruta (gruix proporcional als passatgers). Madrid i Barcelona fan de nusos centrals, però les connexions amb les illes pesen més que el pont aeri.</p>
+  <div class="bar">
+    <div class="legend">
+      <span style="--c: var(--z1)">Península</span>
+      <span style="--c: var(--z2)">Canàries</span>
+      <span style="--c: var(--z3)">Balears</span>
+      <span style="--c: var(--z4)">Melilla</span>
+    </div>
+    <div class="controls" role="group" aria-label="Disposició dels nodes">
+      Disposició:
+      <button type="button" data-layout="force" aria-pressed="true">per connexions (força)</button>
+      <button type="button" data-layout="geo" aria-pressed="false">geogràfica</button>
+    </div>
+  </div>
+  <div class="wrap">
+    <svg id="chart" role="img" aria-labelledby="chart-desc"><desc id="chart-desc"></desc></svg>
+    <aside class="side">
+      <h2>Les 8 rutes amb més passatgers</h2>
+      <ol id="top"></ol>
+      <div class="k" id="kpis"></div>
+      <p>Passa el ratolí per sobre d'un aeroport per aïllar-ne les rutes. Els nodes es poden arrossegar.</p>
+    </aside>
+  </div>
+  <details>
+    <summary>Veure les dades en taula (aeroports)</summary>
+    <table id="taula"><thead><tr><th>Aeroport</th><th>Zona</th><th>Rutes</th><th>Passatgers domèstics</th></tr></thead><tbody></tbody></table>
+  </details>
+  <p class="foot">
+    Font: Eurostat, <i>Air passenger transport routes between partner airports and main airports in Spain</i>
+    (codi <a href="https://ec.europa.eu/eurostat/databrowser/view/avia_par_es/default/table">avia_par_es</a>), passatgers transportats, any 2024 (actualització 19/11/2025). Només rutes entre aeroports espanyols; cada ruta compta els dos sentits.
+    Coordenades: <a href="https://ourairports.com/data/">OurAirports</a> (domini públic). Llicència de les dades Eurostat: CC BY 4.0.
+    Elaboració: Joel Franch Argullol, PAC 2 de Visualització de dades (UOC), 2026.
+  </p>
+</main>
+<div id="tip" role="tooltip"></div>
+<script>
+const { nodes: NODES, links: LINKS } = {"nodes":[{"icao":"LEMD","nom":"Madrid","iata":"MAD","lat":40.4934,"lon":-3.5722,"zona":"Península","passatgers_domestics":17291617,"nombre_rutes":27},{"icao":"LEBL","nom":"Barcelona","iata":"BCN","lat":41.2971,"lon":2.0785,"zona":"Península","passatgers_domestics":14026979,"nombre_rutes":24},{"icao":"LEPA","nom":"Palma","iata":"PMI","lat":39.5517,"lon":2.7388,"zona":"Balears","passatgers_domestics":8917833,"nombre_rutes":18},{"icao":"GCLP","nom":"Gran Canària","iata":"LPA","lat":27.9319,"lon":-15.3866,"zona":"Canàries","passatgers_domestics":7038062,"nombre_rutes":24},{"icao":"GCXO","nom":"Tenerife Nord","iata":"TFN","lat":28.4828,"lon":-16.3417,"zona":"Canàries","passatgers_domestics":6702213,"nombre_rutes":20},{"icao":"LEZL","nom":"Sevilla","iata":"SVQ","lat":37.418,"lon":-5.8931,"zona":"Península","passatgers_domestics":4466289,"nombre_rutes":20},{"icao":"LEMG","nom":"Màlaga","iata":"AGP","lat":36.6782,"lon":-4.5002,"zona":"Península","passatgers_domestics":4103233,"nombre_rutes":17},{"icao":"LEBB","nom":"Bilbao","iata":"BIO","lat":43.3011,"lon":-2.9106,"zona":"Península","passatgers_domestics":3849855,"nombre_rutes":16},{"icao":"LEIB","nom":"Eivissa","iata":"IBZ","lat":38.8729,"lon":1.3731,"zona":"Balears","passatgers_domestics":3775559,"nombre_rutes":9},{"icao":"LEVC","nom":"València","iata":"VLC","lat":39.4892,"lon":-0.481,"zona":"Península","passatgers_domestics":2862158,"nombre_rutes":15},{"icao":"LEST","nom":"Santiago","iata":"SCQ","lat":42.8963,"lon":-8.4151,"zona":"Península","passatgers_domestics":2844025,"nombre_rutes":15},{"icao":"GCRR","nom":"Lanzarote","iata":"ACE","lat":28.9455,"lon":-13.6052,"zona":"Canàries","passatgers_domestics":2789331,"nombre_rutes":11},{"icao":"LEAL","nom":"Alacant","iata":"ALC","lat":38.2822,"lon":-0.5582,"zona":"Península","passatgers_domestics":2454631,"nombre_rutes":10},{"icao":"LEMH","nom":"Menorca","iata":"MAH","lat":39.8626,"lon":4.2186,"zona":"Balears","passatgers_domestics":2045584,"nombre_rutes":8},{"icao":"GCFV","nom":"Fuerteventura","iata":"FUE","lat":28.4527,"lon":-13.8638,"zona":"Canàries","passatgers_domestics":1827885,"nombre_rutes":7},{"icao":"LEAS","nom":"Astúries","iata":"OVD","lat":43.5636,"lon":-6.0346,"zona":"Península","passatgers_domestics":1498336,"nombre_rutes":12},{"icao":"GCLA","nom":"La Palma","iata":"SPC","lat":28.6265,"lon":-17.7556,"zona":"Canàries","passatgers_domestics":1237751,"nombre_rutes":5},{"icao":"LECO","nom":"A Corunya","iata":"LCG","lat":43.3021,"lon":-8.3773,"zona":"Península","passatgers_domestics":1089627,"nombre_rutes":4},{"icao":"LEGR","nom":"Granada","iata":"GRX","lat":37.1887,"lon":-3.7774,"zona":"Península","passatgers_domestics":1064522,"nombre_rutes":8},{"icao":"LEVX","nom":"Vigo","iata":"VGO","lat":42.2318,"lon":-8.6268,"zona":"Península","passatgers_domestics":979097,"nombre_rutes":4},{"icao":"GCTS","nom":"Tenerife Sud","iata":"TFS","lat":28.0445,"lon":-16.5725,"zona":"Canàries","passatgers_domestics":975953,"nombre_rutes":6},{"icao":"LEJR","nom":"Jerez","iata":"XRY","lat":36.7446,"lon":-6.0601,"zona":"Península","passatgers_domestics":554074,"nombre_rutes":5},{"icao":"LEXJ","nom":"Santander","iata":"SDR","lat":43.4271,"lon":-3.82,"zona":"Península","passatgers_domestics":513406,"nombre_rutes":8},{"icao":"GEML","nom":"Melilla","iata":"MLN","lat":35.2798,"lon":-2.9563,"zona":"Melilla","passatgers_domestics":485728,"nombre_rutes":5},{"icao":"LESO","nom":"Sant Sebastià","iata":"EAS","lat":43.3565,"lon":-1.7906,"zona":"Península","passatgers_domestics":448490,"nombre_rutes":6},{"icao":"LEAM","nom":"Almeria","iata":"LEI","lat":36.8439,"lon":-2.3701,"zona":"Península","passatgers_domestics":405631,"nombre_rutes":5},{"icao":"GCHI","nom":"El Hierro","iata":"VDE","lat":27.8148,"lon":-17.8871,"zona":"Canàries","passatgers_domestics":321413,"nombre_rutes":2},{"icao":"LEZG","nom":"Saragossa","iata":"ZAZ","lat":41.6662,"lon":-1.0416,"zona":"Península","passatgers_domestics":236339,"nombre_rutes":4},{"icao":"LEPP","nom":"Pamplona","iata":"PNA","lat":42.77,"lon":-1.6463,"zona":"Península","passatgers_domestics":207573,"nombre_rutes":2},{"icao":"LEVT","nom":"Vitòria","iata":"VIT","lat":42.8828,"lon":-2.7245,"zona":"Península","passatgers_domestics":165532,"nombre_rutes":4},{"icao":"LEVD","nom":"Valladolid","iata":"VLL","lat":41.7061,"lon":-4.8519,"zona":"Península","passatgers_domestics":147563,"nombre_rutes":3},{"icao":"LEMI","nom":"Múrcia","iata":"RMU","lat":37.8029,"lon":-1.1249,"zona":"Península","passatgers_domestics":81748,"nombre_rutes":3},{"icao":"GCGM","nom":"La Gomera","iata":"GMZ","lat":28.0296,"lon":-17.2146,"zona":"Canàries","passatgers_domestics":62251,"nombre_rutes":1}],"links":[{"origen":"LEBL","desti":"LEPA","passatgers_2024":2323085},{"origen":"LEMD","desti":"LEPA","passatgers_2024":2206891},{"origen":"LEBL","desti":"LEMD","passatgers_2024":2036488},{"origen":"GCLP","desti":"LEMD","passatgers_2024":1970045},{"origen":"GCXO","desti":"LEMD","passatgers_2024":1785863},{"origen":"LEBL","desti":"LEIB","passatgers_2024":1259182},{"origen":"LEBL","desti":"LEZL","passatgers_2024":1113832},{"origen":"LEBL","desti":"LEMG","passatgers_2024":1012387},{"origen":"GCLP","desti":"GCXO","passatgers_2024":974985},{"origen":"LEIB","desti":"LEMD","passatgers_2024":961479},{"origen":"LEBL","desti":"LEMH","passatgers_2024":930794},{"origen":"GCLP","desti":"GCRR","passatgers_2024":851589},{"origen":"LEBB","desti":"LEMD","passatgers_2024":808113},{"origen":"LECO","desti":"LEMD","passatgers_2024":777002},{"origen":"GCLA","desti":"GCXO","passatgers_2024":734233},{"origen":"LEPA","desti":"LEVC","passatgers_2024":718467},{"origen":"LEMD","desti":"LEMG","passatgers_2024":696645},{"origen":"LEBB","desti":"LEBL","passatgers_2024":694463},{"origen":"GCFV","desti":"GCLP","passatgers_2024":691346},{"origen":"LEMD","desti":"LEVX","passatgers_2024":686925},{"origen":"GCRR","desti":"LEMD","passatgers_2024":645396},{"origen":"GCXO","desti":"LEBL","passatgers_2024":627934},{"origen":"LEAL","desti":"LEBL","passatgers_2024":582616},{"origen":"LEIB","desti":"LEPA","passatgers_2024":579161},{"origen":"LEPA","desti":"LEZL","passatgers_2024":527230},{"origen":"GCLP","desti":"LEBL","passatgers_2024":524780},{"origen":"LEAL","desti":"LEPA","passatgers_2024":495445},{"origen":"LEBL","desti":"LEGR","passatgers_2024":472024},{"origen":"LEMD","desti":"LEST","passatgers_2024":455847},{"origen":"LEBL","desti":"LEST","passatgers_2024":444926},{"origen":"GCTS","desti":"LEMD","passatgers_2024":440082},{"origen":"GCFV","desti":"LEMD","passatgers_2024":434525},{"origen":"GCRR","desti":"GCXO","passatgers_2024":427136},{"origen":"LEMD","desti":"LEZL","passatgers_2024":416217},{"origen":"LEMH","desti":"LEPA","passatgers_2024":406840},{"origen":"LEAS","desti":"LEBL","passatgers_2024":394723},{"origen":"LEMD","desti":"LEMH","passatgers_2024":391603},{"origen":"LEMG","desti":"LEPA","passatgers_2024":381834},{"origen":"LEMD","desti":"LEVC","passatgers_2024":379247},{"origen":"LEBB","desti":"LEZL","passatgers_2024":354636},{"origen":"LEBB","desti":"LEMG","passatgers_2024":351298},{"origen":"LEIB","desti":"LEVC","passatgers_2024":348973},{"origen":"LEAL","desti":"LEMD","passatgers_2024":345575},{"origen":"LEAS","desti":"LEMD","passatgers_2024":344189},{"origen":"GCXO","desti":"LEZL","passatgers_2024":340329},{"origen":"GCFV","desti":"GCXO","passatgers_2024":335517},{"origen":"LEBB","desti":"LEPA","passatgers_2024":313426},{"origen":"LEVC","desti":"LEZL","passatgers_2024":292949},{"origen":"GCLP","desti":"LEZL","passatgers_2024":286290},{"origen":"LEST","desti":"LEZL","passatgers_2024":283893},{"origen":"GCRR","desti":"LEBL","passatgers_2024":274737},{"origen":"GCHI","desti":"GCXO","passatgers_2024":249797},{"origen":"LEBL","desti":"LECO","passatgers_2024":249680},{"origen":"LEPA","desti":"LEST","passatgers_2024":247668},{"origen":"GCXO","desti":"LEMG","passatgers_2024":246006},{"origen":"GCLP","desti":"LEMG","passatgers_2024":243485},{"origen":"GCLA","desti":"GCLP","passatgers_2024":241045},{"origen":"LEAL","desti":"LEST","passatgers_2024":233612},{"origen":"LEMG","desti":"LEST","passatgers_2024":233576},{"origen":"GEML","desti":"LEMG","passatgers_2024":231857},{"origen":"LEMD","desti":"LESO","passatgers_2024":222525},{"origen":"LEBL","desti":"LEJR","passatgers_2024":218863},{"origen":"GCXO","desti":"LEBB","passatgers_2024":218447},{"origen":"LEJR","desti":"LEMD","passatgers_2024":208634},{"origen":"GCLP","desti":"GCTS","passatgers_2024":208115},{"origen":"LEAM","desti":"LEMD","passatgers_2024":206401},{"origen":"LEBL","desti":"LEVX","passatgers_2024":204886},{"origen":"LEAL","desti":"LEBB","passatgers_2024":201470},{"origen":"LEBB","desti":"LEVC","passatgers_2024":200421},{"origen":"GCLA","desti":"LEMD","passatgers_2024":192505},{"origen":"GCLP","desti":"LEBB","passatgers_2024":187635},{"origen":"LEGR","desti":"LEPA","passatgers_2024":185366},{"origen":"LEMD","desti":"LEXJ","passatgers_2024":184110},{"origen":"GCLP","desti":"LEST","passatgers_2024":183520},{"origen":"LEIB","desti":"LEMG","passatgers_2024":181860},{"origen":"LEAL","desti":"LEIB","passatgers_2024":176449},{"origen":"LEGR","desti":"LEMD","passatgers_2024":174181},{"origen":"LEMD","desti":"LEPP","passatgers_2024":172146},{"origen":"GCFV","desti":"LEBL","passatgers_2024":170722},{"origen":"GCXO","desti":"LEVC","passatgers_2024":167696},{"origen":"LEMG","desti":"LEVC","passatgers_2024":165648},{"origen":"LEST","desti":"LEVC","passatgers_2024":165057},{"origen":"GCTS","desti":"LEST","passatgers_2024":155000},{"origen":"GCXO","desti":"LEAL","passatgers_2024":154433},{"origen":"LEPA","desti":"LEZG","passatgers_2024":142524},{"origen":"LEBL","desti":"LESO","passatgers_2024":137422},{"origen":"LEIB","desti":"LEZL","passatgers_2024":136243},{"origen":"GEML","desti":"LEMD","passatgers_2024":133875},{"origen":"LEBL","desti":"LEXJ","passatgers_2024":129255},{"origen":"GCRR","desti":"LEZL","passatgers_2024":128275},{"origen":"LEAL","desti":"LEZL","passatgers_2024":125774},{"origen":"GCRR","desti":"LEBB","passatgers_2024":125396},{"origen":"GCXO","desti":"LEST","passatgers_2024":123838},{"origen":"LEAS","desti":"LEPA","passatgers_2024":119912},{"origen":"GCLP","desti":"LEVC","passatgers_2024":114987},{"origen":"LEBB","desti":"LEMH","passatgers_2024":110709},{"origen":"LEBB","desti":"LEIB","passatgers_2024":109834},{"origen":"GCRR","desti":"LEST","passatgers_2024":108091},{"origen":"LEMH","desti":"LEVC","passatgers_2024":103945},{"origen":"LEAS","desti":"LEZL","passatgers_2024":102883},{"origen":"LEAM","desti":"LEBL","passatgers_2024":100195},{"origen":"GCXO","desti":"LEAS","passatgers_2024":97595},{"origen":"LEAS","desti":"LEMG","passatgers_2024":95174},{"origen":"GCLP","desti":"LEAS","passatgers_2024":93275},{"origen":"LEAL","desti":"LEAS","passatgers_2024":86854},{"origen":"GCRR","desti":"LEMG","passatgers_2024":85829},{"origen":"LEJR","desti":"LEPA","passatgers_2024":82173},{"origen":"GCLP","desti":"LEPA","passatgers_2024":81918},{"origen":"GCFV","desti":"LEZL","passatgers_2024":79742},{"origen":"LEBB","desti":"LEST","passatgers_2024":79185},{"origen":"GCLP","desti":"LEGR","passatgers_2024":75744},{"origen":"LEBL","desti":"LEVD","passatgers_2024":74038},{"origen":"LEAS","desti":"LEVC","passatgers_2024":72689},{"origen":"GCHI","desti":"GCLP","passatgers_2024":71616},{"origen":"GCFV","desti":"LEST","passatgers_2024":71056},{"origen":"GCTS","desti":"LEZL","passatgers_2024":64957},{"origen":"GCGM","desti":"GCXO","passatgers_2024":62251},{"origen":"GCRR","desti":"GCTS","passatgers_2024":57869},{"origen":"LEAL","desti":"LEVT","passatgers_2024":52403},{"origen":"LEVT","desti":"LEZL","passatgers_2024":52107},{"origen":"GEML","desti":"LEGR","passatgers_2024":51724},{"origen":"LEPA","desti":"LEVD","passatgers_2024":50203},{"origen":"GCLA","desti":"GCTS","passatgers_2024":49930},{"origen":"LEMG","desti":"LEXJ","passatgers_2024":49334},{"origen":"GEML","desti":"LEAM","passatgers_2024":47796},{"origen":"GCLP","desti":"LEVX","passatgers_2024":46376},{"origen":"LEXJ","desti":"LEZL","passatgers_2024":45431},{"origen":"GCFV","desti":"LEBB","passatgers_2024":44977},{"origen":"GCRR","desti":"LEVC","passatgers_2024":44691},{"origen":"GCXO","desti":"LEGR","passatgers_2024":43677},{"origen":"LEMG","desti":"LEMH","passatgers_2024":43281},{"origen":"GCXO","desti":"LEVX","passatgers_2024":40910},{"origen":"GCRR","desti":"LEAS","passatgers_2024":40322},{"origen":"LEMH","desti":"LEZL","passatgers_2024":37873},{"origen":"GCLP","desti":"LEMI","passatgers_2024":36731},{"origen":"LEST","desti":"LEZG","passatgers_2024":36378},{"origen":"LEVC","desti":"LEXJ","passatgers_2024":35476},{"origen":"GCLP","desti":"LEPP","passatgers_2024":35427},{"origen":"LEAM","desti":"LEZL","passatgers_2024":33019},{"origen":"LECO","desti":"LEMG","passatgers_2024":32532},{"origen":"LEMG","desti":"LEVT","passatgers_2024":31857},{"origen":"LEBB","desti":"LEGR","passatgers_2024":31625},{"origen":"LECO","desti":"LEVC","passatgers_2024":30413},{"origen":"LEAS","desti":"LEGR","passatgers_2024":30181},{"origen":"LEBL","desti":"LEMI","passatgers_2024":29909},{"origen":"LEPA","desti":"LEVT","passatgers_2024":29165},{"origen":"GCXO","desti":"LEZG","passatgers_2024":28904},{"origen":"GCLP","desti":"LEZG","passatgers_2024":28533},{"origen":"LEPA","desti":"LEXJ","passatgers_2024":26525},{"origen":"LESO","desti":"LEZL","passatgers_2024":24133},{"origen":"GCLP","desti":"LEVD","passatgers_2024":23322},{"origen":"GCLP","desti":"LEXJ","passatgers_2024":22912},{"origen":"LEIB","desti":"LEST","passatgers_2024":22378},{"origen":"GCXO","desti":"LEJR","passatgers_2024":22299},{"origen":"GCLP","desti":"LESO","passatgers_2024":22281},{"origen":"GCLP","desti":"LEJR","passatgers_2024":22105},{"origen":"LESO","desti":"LEVC","passatgers_2024":21499},{"origen":"LEMG","desti":"LESO","passatgers_2024":20630},{"origen":"LEAS","desti":"LEMH","passatgers_2024":20539},{"origen":"GEML","desti":"LEZL","passatgers_2024":20476},{"origen":"GCXO","desti":"LEXJ","passatgers_2024":20363},{"origen":"GCLA","desti":"LEBL","passatgers_2024":20038},{"origen":"LEAM","desti":"LEBB","passatgers_2024":18220},{"origen":"LEMD","desti":"LEMI","passatgers_2024":15108}]};
+const nfmt = v => d3.format(",")(v).replace(/,/g, ".");
+const mfmt = v => (v / 1e6).toFixed(2).replace(".", ",") + " M";
+const zoneVar = { "Península": "var(--z1)", "Canàries": "var(--z2)", "Balears": "var(--z3)", "Melilla": "var(--z4)" };
+const byId = new Map(NODES.map(d => [d.icao, d]));
+
+const W = 820, H = 640;
+const svg = d3.select("#chart").attr("viewBox", `0 0 ${W} ${H}`);
+d3.select("#chart-desc").text(`Diagrama de xarxa amb ${NODES.length} aeroports i ${LINKS.length} rutes domèstiques. Les rutes amb més passatgers són Barcelona–Palma, Madrid–Palma i Madrid–Barcelona.`);
+
+const r = d3.scaleSqrt().domain([0, d3.max(NODES, d => d.passatgers_domestics)]).range([0, 30]);
+const w = d3.scaleLinear().domain([0, d3.max(LINKS, d => d.passatgers_2024)]).range([0.4, 13]);
+const links = LINKS.map(d => ({ ...d, source: d.origen, target: d.desti }));
+const nodes = NODES.map(d => ({ ...d }));
+const adj = new Map(nodes.map(d => [d.icao, new Set([d.icao])]));
+links.forEach(l => { adj.get(l.origen).add(l.desti); adj.get(l.desti).add(l.origen); });
+
+const geoLayer = svg.append("g").attr("class", "geo").style("display", "none");
+const gLinks = svg.append("g");
+const gNodes = svg.append("g");
+
+const link = gLinks.selectAll("line").data(links).join("line").attr("class", "link")
+  .attr("stroke-width", d => w(d.passatgers_2024))
+  .attr("stroke-opacity", d => 0.18 + 0.5 * (d.passatgers_2024 / 2.4e6));
+const node = gNodes.selectAll("g").data(nodes).join("g").attr("class", "node");
+node.append("circle").attr("r", d => Math.max(3.5, r(d.passatgers_domestics))).attr("fill", d => zoneVar[d.zona]);
+node.append("text").attr("class", d => d.passatgers_domestics > 5e6 ? "big" : "")
+  .attr("text-anchor", "middle")
+  .attr("dy", d => d.passatgers_domestics > 5e6 ? "0.35em" : -(Math.max(3.5, r(d.passatgers_domestics)) + 4))
+  .text(d => d.nom);
+
+// Disposició per força: la distància ideal s'escurça com més passatgers té la ruta
+const sim = d3.forceSimulation(nodes)
+  .force("link", d3.forceLink(links).id(d => d.icao).distance(d => 170 - 80 * Math.sqrt(d.passatgers_2024 / 2.4e6)).strength(0.3))
+  .force("charge", d3.forceManyBody().strength(-420))
+  .force("collide", d3.forceCollide(d => Math.max(3.5, r(d.passatgers_domestics)) + 12))
+  .force("x", d3.forceX(W / 2).strength(0.04))
+  .force("y", d3.forceY(H / 2).strength(0.06))
+  .stop();
+for (let i = 0; i < 500; i++) sim.tick();
+// Escalo el resultat perquè ocupi tot el llenç (mateixa escala en x i y per no deformar distàncies)
+const pad = 40, ex = d3.extent(nodes, d => d.x), ey = d3.extent(nodes, d => d.y);
+const k = Math.min((W - 2 * pad) / (ex[1] - ex[0]), (H - 2 * pad - 10) / (ey[1] - ey[0]));
+const ox = (W - k * (ex[1] - ex[0])) / 2, oy = (H - k * (ey[1] - ey[0])) / 2 + 6;
+nodes.forEach(d => { d.fx_ = ox + k * (d.x - ex[0]); d.fy_ = oy + k * (d.y - ey[0]); });
+
+// Disposició geogràfica: Canàries desplaçades, com als mapes oficials
+const proj = d3.geoConicConformal().rotate([3.7, 0]).parallels([36, 43]);
+const fitPts = { type: "MultiPoint", coordinates: nodes.map(d => geoXY(d)) };
+proj.fitExtent([[50, 40], [W - 50, H - 40]], fitPts);
+function geoXY(d) { return d.zona === "Canàries" ? [d.lon + 7, d.lat + 6.6] : [d.lon, d.lat]; }
+nodes.forEach(d => { const p = proj(geoXY(d)); d.gx = p[0]; d.gy = p[1]; });
+const can = nodes.filter(d => d.zona === "Canàries");
+const bx = d3.extent(can, d => d.gx), by = d3.extent(can, d => d.gy);
+geoLayer.append("rect").attr("class", "geo-box").attr("x", bx[0] - 40).attr("y", by[0] - 40)
+  .attr("width", bx[1] - bx[0] + 80).attr("height", by[1] - by[0] + 70).attr("rx", 6);
+geoLayer.append("text").attr("class", "geo-note").attr("x", bx[0] - 34).attr("y", by[1] + 24).text("Canàries (posició desplaçada)");
+
+let layout = "force";
+function place(dur) {
+  nodes.forEach(d => { d.x = layout === "force" ? d.fx_ : d.gx; d.y = layout === "force" ? d.fy_ : d.gy; });
+  geoLayer.style("display", layout === "geo" ? null : "none");
+  const L = dur ? link.transition().duration(dur) : link, N = dur ? node.transition().duration(dur) : node;
+  L.attr("x1", d => d.source.x).attr("y1", d => d.source.y).attr("x2", d => d.target.x).attr("y2", d => d.target.y);
+  N.attr("transform", d => `translate(${d.x},${d.y})`);
+}
+place(0);
+
+const tip = d3.select("#tip");
+function focus(d) {
+  const nb = adj.get(d.icao);
+  svg.classed("dim", true);
+  node.classed("on", n => nb.has(n.icao));
+  link.classed("on", l => l.source.icao === d.icao || l.target.icao === d.icao);
+}
+function unfocus() { svg.classed("dim", false); node.classed("on", false); link.classed("on", false); tip.style("opacity", 0); }
+node.on("pointerenter", (ev, d) => focus(d))
+  .on("pointermove", (ev, d) => {
+    const mine = links.filter(l => l.source.icao === d.icao || l.target.icao === d.icao)
+      .sort((a, b) => b.passatgers_2024 - a.passatgers_2024).slice(0, 4)
+      .map(l => `${(l.source.icao === d.icao ? l.target : l.source).nom}: ${mfmt(l.passatgers_2024)}`);
+    tip.html(`<strong>${d.nom}</strong> (${d.iata})<br>${d.nombre_rutes} rutes domèstiques · <b>${mfmt(d.passatgers_domestics)}</b> passatgers<br><span style="color:var(--ink-2)">Principals: ${mine.join(" · ")}</span>`)
+      .style("opacity", 1).style("left", Math.min(ev.clientX + 14, innerWidth - 270) + "px").style("top", (ev.clientY + 14) + "px");
+  })
+  .on("pointerleave", unfocus);
+link.on("pointerenter", function (ev, l) {
+    svg.classed("dim", true); node.classed("on", n => n === l.source || n === l.target); link.classed("on", x => x === l);
+  })
+  .on("pointermove", (ev, l) => {
+    tip.html(`<strong>${l.source.nom} – ${l.target.nom}</strong><br><b>${nfmt(l.passatgers_2024)}</b> passatgers (2024)`)
+      .style("opacity", 1).style("left", Math.min(ev.clientX + 14, innerWidth - 270) + "px").style("top", (ev.clientY + 14) + "px");
+  })
+  .on("pointerleave", unfocus);
+
+node.call(d3.drag()
+  .on("drag", function (ev, d) {
+    d.x = ev.x; d.y = ev.y;
+    if (layout === "force") { d.fx_ = ev.x; d.fy_ = ev.y; } else { d.gx = ev.x; d.gy = ev.y; }
+    d3.select(this).attr("transform", `translate(${d.x},${d.y})`);
+    link.filter(l => l.source === d || l.target === d)
+      .attr("x1", l => l.source.x).attr("y1", l => l.source.y).attr("x2", l => l.target.x).attr("y2", l => l.target.y);
+  }));
+
+d3.selectAll(".controls button").on("click", function () {
+  d3.selectAll(".controls button").attr("aria-pressed", "false");
+  d3.select(this).attr("aria-pressed", "true");
+  layout = this.dataset.layout; place(900);
+});
+// Enllaç directe a la vista geogràfica: ...html#geo
+if (location.hash === "#geo") document.querySelector('[data-layout="geo"]').click();
+
+const topRoutes = [...links].sort((a, b) => b.passatgers_2024 - a.passatgers_2024).slice(0, 8);
+d3.select("#top").selectAll("li").data(topRoutes).join("li").attr("class", (d, i) => i < 3 ? "top" : "")
+  .html(d => `${d.source.nom} – ${d.target.nom} <b>${mfmt(d.passatgers_2024)}</b>`)
+  .on("pointerenter", (ev, l) => { svg.classed("dim", true); node.classed("on", n => n === l.source || n === l.target); link.classed("on", x => x === l); })
+  .on("pointerleave", unfocus);
+
+const total = d3.sum(links, d => d.passatgers_2024);
+const hubs = d3.sum(links.filter(l => ["LEMD", "LEBL"].includes(l.source.icao) || ["LEMD", "LEBL"].includes(l.target.icao)), d => d.passatgers_2024);
+const n = nodes.length, m = links.length;
+d3.select("#kpis").html(`<span>Aeroports (nodes)</span><b>${n}</b><span>Rutes (arestes)</span><b>${m}</b>` +
+  `<span>Densitat de la xarxa</span><b>${(2 * m / (n * (n - 1)) * 100).toFixed(0)} %</b>` +
+  `<span>Passatgers totals</span><b>${mfmt(total)}</b>` +
+  `<span>Rutes que toquen MAD o BCN</span><b>${(hubs / total * 100).toFixed(0)} % dels passatgers</b>`);
+
+d3.select("#taula tbody").selectAll("tr").data(NODES).join("tr")
+  .html(d => `<td>${d.nom} (${d.iata})</td><td>${d.zona}</td><td>${d.nombre_rutes}</td><td>${nfmt(d.passatgers_domestics)}</td>`);
+</script>
+</body>
+</html>
